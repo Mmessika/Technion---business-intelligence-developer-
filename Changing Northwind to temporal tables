@@ -1,0 +1,76 @@
+USE Northwind
+IF NOT EXISTS (SELECT 0
+               FROM information_schema.schemata 
+               WHERE schema_name='HISTORY')
+BEGIN
+  EXEC sp_executesql N'CREATE SCHEMA HISTORY';
+END
+
+
+IF not EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'start_date'
+          AND Object_ID = Object_ID(N'HISTORY.Customers'))
+BEGIN
+	alter table [dbo].[Customers]
+	add
+	[start_date] DateTime2 generated always as row start 
+		constraint DF_SysStart default SYSUTCDATETIME(),
+	[end_date] DateTime2 generated always as row end 
+		constraint DF_SysEnd default convert (datetime2, '9999-12-31 23:59:59.9999999'),
+	PERIOD FOR SYSTEM_TIME ([start_date], [end_date]);
+END
+
+alter table [dbo].[Customers]
+	set (SYSTEM_VERSIONING = ON (HISTORY_TABLE = HISTORY.[Customers]))
+GO
+
+IF not EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'start_date'
+          AND Object_ID = Object_ID(N'HISTORY.Employees'))
+BEGIN
+	alter table [dbo].[Employees]
+	add
+	[start_date] DateTime2 generated always as row start 
+		constraint DF_SysStartTime default SYSUTCDATETIME(),
+	[end_date] DateTime2 generated always as row end 
+		constraint DF_SysEndTime default convert (datetime2, '9999-12-31 23:59:59.9999999'),
+	PERIOD FOR SYSTEM_TIME ([start_date], [end_date]);	
+END
+
+alter table [dbo].[Employees]
+	set (SYSTEM_VERSIONING = ON (HISTORY_TABLE = HISTORY.Employees))
+GO
+
+IF not EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'start_date'
+          AND Object_ID = Object_ID(N'HISTORY.Orders'))
+BEGIN
+	alter table [dbo].[Orders]
+	add
+	[start_date] DateTime2 generated always as row start 
+		constraint DF_SysStartTime1 default SYSUTCDATETIME(),
+	[end_date] DateTime2 generated always as row end 
+		constraint DF_SysEndTime1 default convert (datetime2, '9999-12-31 23:59:59.9999999'),
+	PERIOD FOR SYSTEM_TIME ([start_date], [end_date]);
+END
+
+alter table [dbo].[Orders]
+	set (SYSTEM_VERSIONING = ON (HISTORY_TABLE = HISTORY.Orders))
+GO
+
+IF not EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'start_date'
+          AND Object_ID = Object_ID(N'HISTORY.Products'))
+BEGIN
+	alter table [dbo].[Products]
+	add
+	[start_date] DateTime2 generated always as row start 
+		constraint DF_SysStartTime2 default SYSUTCDATETIME(),
+	[end_date] DateTime2 generated always as row end 
+		constraint DF_SysEndTime2 default convert (datetime2, '9999-12-31 23:59:59.9999999'),
+	PERIOD FOR SYSTEM_TIME ([start_date], [end_date]);
+END
+
+alter table [dbo].[Products]
+	set (SYSTEM_VERSIONING = ON (HISTORY_TABLE = HISTORY.Products))
+GO
