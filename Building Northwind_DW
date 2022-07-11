@@ -1,0 +1,268 @@
+use master
+go
+if exists (select 1 from sys.databases
+	where name = 'Northwind_dw')
+begin
+	alter database [Northwind_dw] set single_user with rollback immediate
+	drop database [Northwind_dw]
+end
+
+create database [Northwind_dw]
+GO
+
+USE [Northwind_dw]
+GO
+/****** Object:  Schema [Dimension]    Script Date: 10/04/2022 15:25:44 ******/
+CREATE SCHEMA [Dimension]
+GO
+/****** Object:  Schema [fact]    Script Date: 10/04/2022 15:25:44 ******/
+CREATE SCHEMA [fact]
+GO
+/****** Object:  Schema [Integration]    Script Date: 10/04/2022 15:25:44 ******/
+CREATE SCHEMA [Integration]
+GO
+/****** Object:  Table [Dimension].[Customers]    Script Date: 10/04/2022 15:25:44 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Dimension].[Customers](
+	[CustomerSK] [int] IDENTITY(1,1) NOT NULL,
+	[CustomerBK] [nvarchar](5) NOT NULL,
+	[CustomerName] [nvarchar](40) NOT NULL,
+	[City] [nvarchar](15) NULL,
+	[Country] [nvarchar](15) NULL,
+	[start_date] [datetime2](7) NULL,
+	[end_date] [datetime2](7) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[CustomerSK] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [Dimension].[Date]    Script Date: 10/04/2022 15:25:44 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Dimension].[Date](
+	[DateSK] [int] IDENTITY(1,1) NOT NULL,
+	[date] [datetime] NULL,
+	[FullDateTimeUK] [char](10) NULL,
+	[monthNum] [int] NOT NULL,
+	[monthname] [varchar](10) NOT NULL,
+	[dayofMonth] [int] NULL,
+	[yearNum] [int] NOT NULL,
+	[dayofYear] [int] NULL,
+	[dayOfWeeknum] [int] NULL,
+	[dayofWeekName] [varchar](10) NULL,
+	[QuarterNum] [int] NULL,
+	[DayOfQuarter] [int] NULL,
+	[WeekOfMonth] [int] NULL,
+	[MMYYYY] [char](6) NULL,
+	[FullDateTimeUSA] [nchar](10) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[DateSK] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [Dimension].[Employees]    Script Date: 10/04/2022 15:25:44 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Dimension].[Employees](
+	[EmployeeSK] [int] IDENTITY(1,1) NOT NULL,
+	[EmployeeBK] [int] NOT NULL,
+	[Fullname] [nvarchar](1000) NULL,
+	[title] [nvarchar](30) NULL,
+	[Birthdate] [datetime] NULL,
+	[age] [int] NULL,
+	[seniority] [int] NULL,
+	[city] [nvarchar](1000) NULL,
+	[Country] [nvarchar](1000) NULL,
+	[ReportsTo] [int] NULL,
+	[start_date] [datetime2](7) NOT NULL,
+	[end_date] [datetime2](7) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[EmployeeSK] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [Dimension].[products]    Script Date: 10/04/2022 15:25:44 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Dimension].[products](
+	[ProductSK] [int] IDENTITY(1,1) NOT NULL,
+	[ProductBK] [int] NOT NULL,
+	[productname] [nvarchar](40) NOT NULL,
+	[unitprice] [money] NOT NULL,
+	[SupplierName] [nvarchar](100) NOT NULL,
+	[categoryname] [nvarchar](100) NOT NULL,
+	[Discontinued] [bit] NOT NULL,
+	[startdate] [datetime2](7) NULL,
+	[enddate] [datetime2](7) NULL,
+ CONSTRAINT [PK_products] PRIMARY KEY CLUSTERED 
+(
+	[ProductSK] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+CREATE TABLE [Dimension].[Orders](
+	[OrdersSK] [int] IDENTITY(1,1) NOT NULL,
+	[OrdersBK] [int] NOT NULL,
+	[OrderDate] [datetime] NOT NULL,
+	[RequiredDate] [datetime] NULL,
+	[ShippedDate] [datetime] NULL,
+	[Freight] [money] NULL,
+	[ShipName] [nvarchar](40) NULL,
+	[ShipAddress] [nvarchar](60),
+	[ShipCity] [nvarchar](15),
+	[ShipRegion] [nvarchar](40),
+	[ShipPostalCode] [nvarchar](40),
+	[ShipCountry] [nvarchar](15),
+	[start_date] [datetime2](7) NULL,
+	[end_date] [datetime2](7) NULL,
+CONSTRAINT [PK_Orders] PRIMARY KEY CLUSTERED 
+(
+	[OrdersSK] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [fact].[sales]    Script Date: 10/04/2022 15:25:44 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [fact].[sales](
+	[salesSK] [int] IDENTITY(1,1) NOT NULL,
+	[salesBK] [int] NULL,
+	[OrdersSK] [int] NULL,
+	[CustomersSK] [int] NULL,
+	[EmployeesSK] [int] NULL,
+	[ProductsSK] [int] NULL,
+	[DateSK] [int] NULL,
+	[unitprice] [money] NULL,
+	[quantity] [smallint] NULL,
+	[discount] [real] NULL,
+ CONSTRAINT [PK__sales__E31B20D46529928B] PRIMARY KEY CLUSTERED 
+(
+	[salesSK] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [Integration].[lineage]    Script Date: 10/04/2022 15:25:44 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Integration].[lineage](
+	[lineagekey] [int] IDENTITY(1,1) NOT NULL,
+	[Tablename] [sysname] NOT NULL,
+	[LastCutoffTime] [datetime2](7) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[lineagekey] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [Dimension].[Customers] ADD  CONSTRAINT [DF_Customers_start_date]  DEFAULT (sysutcdatetime()) FOR [start_date]
+GO
+ALTER TABLE [Dimension].[Employees] ADD  DEFAULT (sysutcdatetime()) FOR [start_date]
+GO
+ALTER TABLE [fact].[sales]  WITH CHECK ADD  CONSTRAINT [FK_sales_Customers] FOREIGN KEY([CustomersSK])
+REFERENCES [Dimension].[Customers] ([CustomerSK])
+GO
+ALTER TABLE [fact].[sales] CHECK CONSTRAINT [FK_sales_Customers]
+GO
+ALTER TABLE [fact].[sales]  WITH CHECK ADD  CONSTRAINT [FK_sales_Date] FOREIGN KEY([DateSK])
+REFERENCES [Dimension].[Date] ([DateSK])
+GO
+ALTER TABLE [fact].[sales] CHECK CONSTRAINT [FK_sales_Date]
+GO
+ALTER TABLE [fact].[sales]  WITH CHECK ADD  CONSTRAINT [FK_sales_Employees] FOREIGN KEY([EmployeesSK])
+REFERENCES [Dimension].[Employees] ([EmployeeSK])
+GO
+ALTER TABLE [fact].[sales] CHECK CONSTRAINT [FK_sales_Employees]
+GO
+ALTER TABLE [fact].[sales]  WITH CHECK ADD  CONSTRAINT [FK_sales_products] FOREIGN KEY([ProductsSK])
+REFERENCES [Dimension].[products] ([ProductSK])
+GO
+ALTER TABLE [fact].[sales] CHECK CONSTRAINT [FK_sales_products]
+GO
+ALTER TABLE [fact].[sales]  WITH CHECK ADD  CONSTRAINT [FK_sales_Orders] FOREIGN KEY([OrdersSK])
+REFERENCES [Dimension].[Orders] ([OrdersSK])
+GO
+ALTER TABLE [fact].[sales] CHECK CONSTRAINT [FK_sales_Orders]
+GO
+/****** Object:  StoredProcedure [dbo].[populateDateDimension]    Script Date: 10/04/2022 15:25:44 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+Create proc [dbo].[populateDateDimension] 
+	 
+as
+begin
+
+declare @startDate datetime 
+declare @EndDate datetime 
+declare @CurrentDate datetime 
+
+
+select  @startDate =min(orderdate) from [Northwind]..orders
+select  @EndDate = max(orderdate) from [Northwind]..orders 
+ 
+ 
+
+while (@startDate <= @EndDate ) 
+begin
+
+
+
+set @CurrentDate =  @startDate
+
+if not exists  (  select 1 from [Dimension].[Date]
+		where  @CurrentDate =  date ) 
+	begin 
+insert into  Dimension.Date (date , 
+[FullDateTimeUK] , [monthNum],
+[monthname],[dayofMonth],[yearNum],[dayofYear],[dayOfWeeknum],
+[dayofWeekName],[QuarterNum],[DayOfQuarter],[WeekOfMonth],[MMYYYY],
+[FullDateTimeUSA] ) 
+
+select @CurrentDate , 
+convert (char(10) , @CurrentDate , 103 ) , month(@CurrentDate) , 
+datename( mm , @CurrentDate) , day(@CurrentDate) , year(@CurrentDate) , 
+datepart (dy , @CurrentDate ) , 
+datepart (dw , @CurrentDate ) ,
+datename ( dw , @CurrentDate ) , 
+datepart (qq , @CurrentDate ) ,
+datediff ( dd , 
+	dateadd  ( qq , datediff (  qq , 0 , @CurrentDate )  , 0) ,
+	@CurrentDate) + 1 , --  dayof Quarter
+
+
+    datepart ( wk , @CurrentDate )  - 
+		datepart ( wk , cast ( 
+		concat ( month(@CurrentDate) , '/01/'  , year(@CurrentDate) )
+		as datetime )  ) + 1  , -- weekofmonth 
+
+concat (right( concat ('0',  month(@CurrentDate)    ) , 2) ,
+   year(@CurrentDate)  ) ,
+
+convert (char(10) , @CurrentDate , 101 ) 
+
+--End of Insert 
+			end  --- if
+	set @startDate =  dateadd( dd ,  1 ,  @startdate ) 
+	end -- while
+end
+
+GO
